@@ -23,6 +23,5 @@ const getRandomArr = (someArray) => {
 
 module.exports = {
   getRandomInt,
-  shuffle,
   getRandomArr,
 };
