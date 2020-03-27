@@ -10,12 +10,14 @@
     "eslint": "6.8.0",
     "eslint-config-htmlacademy": "0.5.2",
     "eslint-plugin-react": "^7.19.0",
-    "mkdirp": "1.0.3"
+    "mkdirp": "1.0.3",
+    "nodemon": "2.0.2"
   },
   "scripts": {
     "test": "npm run eslint",
     "eslint": "eslint --ext .js src/",
-    "start": "node ./src/service/service.js"
+    "start": "node ./src/service/service.js",
+    "server": "nodemon ./src/service/service.js --server 3000"
   },
   "repository": {
     "type": "git",
