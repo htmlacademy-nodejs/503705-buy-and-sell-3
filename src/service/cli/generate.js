@@ -1,6 +1,6 @@
 'use strict';
 
-const fs = require(`fs`);
+const fs = require(`fs`).promises;
 const chalk = require(`chalk`);
 const {
   ExitCode,
@@ -86,22 +86,22 @@ const generateOffers = (count) => (
 
 module.exports = {
   name: `--generate`,
-  run(userCountOfAds) {
+  async run(userCountOfAds) {
     const count = userCountOfAds;
 
-  if (Number.parseInt(count, 10) > MAX_COUNT) {
-    console.error(chalk.red(COUNT_ERROR_MESSAGE));
-    process.exit(ExitCode.error);
-  }
+    if (Number.parseInt(count, 10) > MAX_COUNT) {
+      console.error(chalk.red(COUNT_ERROR_MESSAGE));
+      process.exit(ExitCode.error);
+    }
+    
     const countOfAds = Number.parseInt(count, 10) || DEFAULT_COUNT;
     const fileContent = JSON.stringify(generateOffers(countOfAds));
 
-    fs.writeFile(FILE_NAME, fileContent, (err) => {
-      if (err) {
-        return console.err(chalk.red(FILE_ERR_MESSAGE));
-      }
-
-      return console.log(chalk.green(FILE_SUCCESS_MESSAGE));
-    });
+    try {
+      await fs.writeFile(FILE_NAME, fileContent);
+      console.log(chalk.green(FILE_SUCCESS_MESSAGE));
+    } catch (err) {
+      console.error(chalk.red(FILE_ERR_MESSAGE));
+    }
   },
 };
