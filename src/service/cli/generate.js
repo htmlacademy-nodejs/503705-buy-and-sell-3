@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require(`fs`);
+const chalk = require(`chalk`);
 const {
   ExitCode,
   COUNT_ERROR_MESSAGE,
@@ -89,7 +90,7 @@ module.exports = {
     const count = userCountOfAds;
 
   if (Number.parseInt(count, 10) > MAX_COUNT) {
-    console.error(COUNT_ERROR_MESSAGE);
+    console.error(chalk.red(COUNT_ERROR_MESSAGE));
     process.exit(ExitCode.error);
   }
     const countOfAds = Number.parseInt(count, 10) || DEFAULT_COUNT;
@@ -97,10 +98,10 @@ module.exports = {
 
     fs.writeFile(FILE_NAME, fileContent, (err) => {
       if (err) {
-        return console.err(FILE_ERR_MESSAGE);
+        return console.err(chalk.red(FILE_ERR_MESSAGE));
       }
 
-      return console.log(FILE_SUCCESS_MESSAGE);
+      return console.log(chalk.green(FILE_SUCCESS_MESSAGE));
     });
   },
 };
