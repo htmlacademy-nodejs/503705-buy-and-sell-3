@@ -2,6 +2,10 @@
 
 const fs = require(`fs`);
 const {
+  ExitCode,
+  COUNT_ERROR_MESSAGE,
+} = require(`../../constants.js`);
+const {
   getRandomInt,
   getRandomArr,
 } = require(`../../utils`);
@@ -10,6 +14,7 @@ const FILE_NAME = `mock.json`;
 const FILE_ERR_MESSAGE = `Can't write data to file...`;
 const FILE_SUCCESS_MESSAGE = `Operation success. File created.`;
 const DEFAULT_COUNT = 1;
+const MAX_COUNT = 1000;
 
 const TITLES = [
   `Продам книги Стивена Кинга.`,
@@ -81,7 +86,12 @@ const generateOffers = (count) => (
 module.exports = {
   name: `--generate`,
   run(userCountOfAds) {
-    const [count] = userCountOfAds;
+    const count = userCountOfAds;
+
+  if (Number.parseInt(count, 10) > MAX_COUNT) {
+    console.error(COUNT_ERROR_MESSAGE);
+    process.exit(ExitCode.error);
+  }
     const countOfAds = Number.parseInt(count, 10) || DEFAULT_COUNT;
     const fileContent = JSON.stringify(generateOffers(countOfAds));
 
