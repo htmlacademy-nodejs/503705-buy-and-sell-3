@@ -1,6 +1,11 @@
 'use strict';
 
-const fs = require(`fs`);
+const fs = require(`fs`).promises;
+const chalk = require(`chalk`);
+const {
+  ExitCode,
+  COUNT_ERROR_MESSAGE,
+} = require(`../../constants.js`);
 const {
   getRandomInt,
   getRandomArr,
@@ -10,6 +15,7 @@ const FILE_NAME = `mock.json`;
 const FILE_ERR_MESSAGE = `Can't write data to file...`;
 const FILE_SUCCESS_MESSAGE = `Operation success. File created.`;
 const DEFAULT_COUNT = 1;
+const MAX_COUNT = 1000;
 
 const TITLES = [
   `Продам книги Стивена Кинга.`,
@@ -80,17 +86,22 @@ const generateOffers = (count) => (
 
 module.exports = {
   name: `--generate`,
-  run(userCountOfAds) {
-    const [count] = userCountOfAds;
+  async run(userCountOfAds) {
+    const count = userCountOfAds;
+
+    if (Number.parseInt(count, 10) > MAX_COUNT) {
+      console.error(chalk.red(COUNT_ERROR_MESSAGE));
+      process.exit(ExitCode.error);
+    }
+    
     const countOfAds = Number.parseInt(count, 10) || DEFAULT_COUNT;
     const fileContent = JSON.stringify(generateOffers(countOfAds));
 
-    fs.writeFile(FILE_NAME, fileContent, (err) => {
-      if (err) {
-        return console.err(FILE_ERR_MESSAGE);
-      }
-
-      return console.log(FILE_SUCCESS_MESSAGE);
-    });
+    try {
+      await fs.writeFile(FILE_NAME, fileContent);
+      console.log(chalk.green(FILE_SUCCESS_MESSAGE));
+    } catch (err) {
+      console.error(chalk.red(FILE_ERR_MESSAGE));
+    }
   },
 };

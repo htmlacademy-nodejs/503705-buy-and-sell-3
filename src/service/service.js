@@ -5,8 +5,6 @@ const {Cli} = require(`./cli`);
 const {
   DEFAULT_COMMAND,
   USER_ARGV_INDEX,
-  MAX_COUNT_OF_ADS,
-  COUNT_ERROR_MESSAGE,
   ExitCode
 } = require(`../constants.js`);
 
@@ -19,11 +17,7 @@ if (userArguments.length === 0 || !Cli[userCommand]) {
 }
 
 if (userArguments.slice(1)) {
-  const [userCountOfAds] = userArguments.slice(1);
-  if (Number.parseInt(userCountOfAds, 10) > MAX_COUNT_OF_ADS) {
-    console.error(COUNT_ERROR_MESSAGE);
-    process.exit(ExitCode.error);
-  }
+  const [count] = userArguments.slice(1);
 
-  Cli[userCommand].run(userCountOfAds);
+  Cli[userCommand].run(count);
 }
