@@ -17,7 +17,7 @@ const shuffle = (someArray) => {
 
 const getRandomArr = (someArray) => {
   let randomArray = someArray.slice();
-  const maxIndex = getRandomInt(0, randomArray.length - 1);
+  const maxIndex = getRandomInt(1, randomArray.length - 1);
   return shuffle(randomArray).slice(0, maxIndex);
 };
 
