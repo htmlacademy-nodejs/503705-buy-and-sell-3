@@ -2,7 +2,7 @@
 
 const chalk = require(`chalk`);
 const fs = require(`fs`).promises;
-const http = require(`http`);
+const express = require(`express`);
 const {HttpCode} = require(`../../constants.js`);
 
 const DEFAULT_PORT = 3000;
@@ -10,44 +10,21 @@ const FILE_NAME = `mock.json`;
 const ERROR_MESSAGE = `Ошибка при создании сервера`;
 const SUCCESS_MESSAGE = `Ожидаю соединений на порт `;
 
-const sendResponce = (res, statusCode, message) => {
-  const template = `
-    <!Doctype html>
-      <html lang="ru">
-        <head>
-          <title>Hello from Node</title>
-        </head>
-        <body>${message}</body>
-      </html>`.trim();
-  
-  res.statusCode = statusCode;
-  res.writeHead(statusCode, {
-    'Content-Type': `text/html; charset=UTF-8`,
-  });
+const app = express();
 
-  res.end(template);
-};
+app.use(express.json());
 
-const onClientConnect = async (req, res) => {
-  const notFoundMessageText = `Not found`;
-
-  switch (req.url) {
-    case `/`:
-      try {
-        const fileContent = await fs.readFile(FILE_NAME);
-        const mocks = JSON.parse(fileContent);
-        const message = mocks.map((post) => `<li>${post.title}</li>`).join(``);
-        sendResponce(res, HttpCode.OK, `<ul>${message}</ul>`);
-      } catch (err) {
-        sendResponce(res, HttpCode.NOT_FOUND, notFoundMessageText);
-      }
-    break;
-
-    default:
-      sendResponce(res, HttpCode.NOT_FOUND, notFoundMessageText);
-      break;
+app.get(`/offers`, async (req, res) => {
+  try {
+    const fileContent = await fs.readFile(FILE_NAME);
+    const mocks = JSON.parse(fileContent);
+    res.json(mocks);
+  } catch (error) {
+    res.status(HttpCode.INTERNAL_SERVER_ERROR).send(error);
   }
-};
+});
+
+app.use((req, res) => res.status(HttpCode.NOT_FOUND).send(`Not found`));
 
 module.exports = {
   name: `--server`,
@@ -55,14 +32,12 @@ module.exports = {
     const customPort = args;
     const port = Number.parseInt(customPort, 10) || DEFAULT_PORT;
 
-    http.createServer(onClientConnect)
-      .listen(port)
-      .on(`listening`, (err) => {
-        if (err) {
-          return console.error(chalk.red(ERROR_MESSAGE), err);
-        }
+    app.listen(port, (error) => {
+      if (error) {
+        return console.error(chalk.red(ERROR_MESSAGE));
+      }
 
-        return console.info(chalk.green(SUCCESS_MESSAGE + port));
-      });
+      return console.info(chalk.green(SUCCESS_MESSAGE));
+    });
   },
 };
