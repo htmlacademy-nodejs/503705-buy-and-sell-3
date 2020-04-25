@@ -4,6 +4,7 @@ const chalk = require(`chalk`);
 const fs = require(`fs`).promises;
 const express = require(`express`);
 const {HttpCode} = require(`../../constants.js`);
+const apiOffers = require(`./api-offers.js`);
 
 const DEFAULT_PORT = 3000;
 const FILE_NAME = `mock.json`;
@@ -13,6 +14,7 @@ const SUCCESS_MESSAGE = `Ожидаю соединений на порт `;
 const app = express();
 
 app.use(express.json());
+app.use(`/api`, apiOffers);
 
 app.get(`/offers`, async (req, res) => {
   try {
@@ -37,7 +39,7 @@ module.exports = {
         return console.error(chalk.red(ERROR_MESSAGE));
       }
 
-      return console.info(chalk.green(SUCCESS_MESSAGE));
+      return console.info(chalk.green(SUCCESS_MESSAGE + `${port}`));
     });
   },
 };
