@@ -1,8 +1,9 @@
 'use strict';
 
 const fs = require(`fs`).promises;
-const chalk = require(`chalk`);
 const {nanoid} = require(`nanoid`);
+const {getLogger} = require(`../logger.js`);
+const logger = getLogger();
 
 const {
   ExitCode,
@@ -80,7 +81,7 @@ module.exports = {
     const count = userCountOfAds;
 
     if (Number.parseInt(count, 10) > MAX_COUNT) {
-      console.error(chalk.red(COUNT_ERROR_MESSAGE));
+      logger.error(COUNT_ERROR_MESSAGE);
       process.exit(ExitCode.error);
     }
     
@@ -89,9 +90,9 @@ module.exports = {
 
     try {
       await fs.writeFile(FILE_NAME, fileContent);
-      console.log(chalk.green(FILE_SUCCESS_MESSAGE));
+      logger.info(FILE_SUCCESS_MESSAGE);
     } catch (err) {
-      console.error(chalk.red(FILE_ERR_MESSAGE));
+      logger.error(FILE_ERR_MESSAGE);
     }
   },
 };
