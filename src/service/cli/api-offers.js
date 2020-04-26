@@ -55,22 +55,23 @@ router.get(`/offers`, (req, res) => {
 });
 
 router.post(`/offers`, (req, res) => {
-  if (!req.body.title || !req.body.type || !req.body.sum || !req.body.category || !req.body.picture) {
-    return res.statusCode(400).send(`Нужно заполнить все поля.`);
-  }
-  const newOffer = {
-    id: nanoid(),
-    title: req.body.title,
-    type: req.body.type,
-    sum: req.body.sum,
-    category: req.body.category.split(`, `).map((item) => item.trim()),
-    picture: req.body.picture,
-    comments: [],
+  if (req.body.title && req.body.type && req.body.sum && req.body.category && req.body.picture) {
+    const newOffer = {
+      id: nanoid(),
+      title: req.body.title,
+      type: req.body.type,
+      sum: req.body.sum,
+      category: req.body.category.split(`, `).map((item) => item.trim()),
+      picture: req.body.picture,
+      comments: [],
+    }
+  
+    OFFERS.push(newOffer);
+    console.log(chalk.green(`Объявление успешно создано.`));
+    return res.send(getOfferMarkup(newOffer));
   }
 
-  OFFERS.push(newOffer);
-  console.log(chalk.green(`Объявление успешно создано.`));
-  return res.send(getOfferMarkup(newOffer));
+  return res.status(400).send(`Нужно заполнить все поля.`);
 });
 
 router.get(`/offers/:offerId`, (req, res) => {
@@ -79,20 +80,24 @@ router.get(`/offers/:offerId`, (req, res) => {
   if (offer) {
     return res.send(getOfferMarkup(offer));
   }
-  return res.statusCode(404).send(NO_OFFER_MESSAGE);
+  return res.status(404).send(NO_OFFER_MESSAGE);
 });
 
 router.put(`/offers/:offerId`, (req, res) => {
   const offerId = req.params.offerId;
   const offer = OFFERS.find((item) => offerId === item.id);
-  offer.title = req.body.title;
-  offer.description = req.body.description;
-  offer.sum = req.body.sum;
-  offer.category = req.body.category.split(`, `).map((item) => item.trim());
-  offer.picture = req.body.picture;
-  
-  console.log(chalk.green(`Изменения сохранены`));
-  res.send(getOfferMarkup(offer));
+  if (req.body.title && req.body.description && req.body.sum && req.body.category && req.body.picture) {
+    offer.id = offerId;
+    offer.title = req.body.title;
+    offer.description = req.body.description;
+    offer.sum = req.body.sum;
+    offer.category = req.body.category.split(`, `).map((item) => item.trim());
+    offer.picture = req.body.picture;
+
+    console.log(chalk.green(`Изменения сохранены`));
+    return res.send(getOfferMarkup(offer));
+  }
+  return res.status(400).send(`Нужно заполнить все поля.`);
 });
 
 router.delete(`/offers/:offerId`, (req, res) => {
@@ -182,9 +187,9 @@ router.get(`/search`, (req, res) => {
         getOffersListMarkup(matchingOffers)
         );
     }
-    return res.statusCode(404).send(`Не найдено ни одной публикации.`);
+    return res.status(404).send(`Не найдено ни одной публикации.`);
   }
-  return res.statusCode(400).send(`Введите в строку поиска слово.`);
+  return res.status(400).send(`Введите в строку поиска слово.`);
 });
 
 
