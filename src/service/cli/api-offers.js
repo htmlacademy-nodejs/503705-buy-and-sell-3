@@ -55,8 +55,8 @@ router.get(`/offers`, (req, res) => {
 });
 
 router.post(`/offers`, (req, res) => {
-  if (!req.body) {
-    return res.status(404).send(`Ошибка при создании объявления.`);
+  if (!req.body.title || !req.body.type || !req.body.sum || !req.body.category || !req.body.picture) {
+    return res.statusCode(400).send(`Нужно заполнить все поля.`);
   }
   const newOffer = {
     id: nanoid(),
@@ -79,7 +79,7 @@ router.get(`/offers/:offerId`, (req, res) => {
   if (offer) {
     return res.send(getOfferMarkup(offer));
   }
-  return res.send(NO_OFFER_MESSAGE);
+  return res.statusCode(404).send(NO_OFFER_MESSAGE);
 });
 
 router.put(`/offers/:offerId`, (req, res) => {
@@ -102,7 +102,7 @@ router.delete(`/offers/:offerId`, (req, res) => {
     OFFERS.splice(OFFERS.indexOf(offer), 1);
     return res.send(`Объявление удалено.`);
   }
-  return res.send(NO_OFFER_MESSAGE);
+  return res.statusCode(404).send(NO_OFFER_MESSAGE);
 });
 
 router.get(`/categories`, async (req, res) => {
@@ -119,24 +119,28 @@ router.get(`/offers/:offerId/comments`, (req, res) => {
   if(offer) {
     return res.send(getCommentsMarkup(offer));
   }
+  return res.statusCode(404).send(NO_OFFER_MESSAGE);
 });
 
 router.post(`/offers/:offerId/comments`, (req, res) => {
   if (!req.body) {
-    return (`Ошибка при создании комментария.`);
+    return res.statusCode(400).send(`Ошибка при создании комментария.`);
   }
   const offerId = req.params.offerId;
   const offer = OFFERS.find((item) => offerId === item.id);
   if (offer) {
-    const newComment = {
-      id: nanoid(),
-      comment: req.body.comment
-    };
-    offer.comments.push(newComment);
-    console.log(chalk.green(`Комментарий успешно создан`));
-    return res.send(getCommentsMarkup(offer));
+    if (req.body.comment) {
+      const newComment = {
+        id: nanoid(),
+        comment: req.body.comment
+      };
+      offer.comments.push(newComment);
+      console.log(chalk.green(`Комментарий успешно создан`));
+      return res.send(getCommentsMarkup(offer));
+    }
+    return res.statusCode(400).send(`Напишите текст комментария.`);
   }
-  return res.send(NO_OFFER_MESSAGE);
+  return res.statusCode(404).send(NO_OFFER_MESSAGE);
 });
 
 router.delete(`/offers/:offerId/comments/:commentId`, (req, res) => {
@@ -149,9 +153,9 @@ router.delete(`/offers/:offerId/comments/:commentId`, (req, res) => {
       offer.comments.splice(offer.comments.indexOf(comment), 1);
       return res.send(`Комментарий удален.`);
     }
-    return res.send(`Нет такого комментария у этого объявления. Поищите другой.`);
+    return res.statusCode(404).send(`Нет такого комментария у этого объявления. Поищите другой.`);
   }
-  return res.send(NO_OFFER_MESSAGE);
+  return res.statusCode(404).send(NO_OFFER_MESSAGE);
 });
 
 router.get(`/search`, (req, res) => {
@@ -174,13 +178,13 @@ router.get(`/search`, (req, res) => {
         postsString = `публикаций`;
       }
       return res.send(
-        `<h1>Найдено ${matchingOffers.length} ${postsString}</h1>` + 
+        `<h1>Найдено ${postsAmount} ${postsString}</h1>` + 
         getOffersListMarkup(matchingOffers)
         );
     }
-    return res.send(`Не найдено ни одной публикации.`);
+    return res.statusCode(404).send(`Не найдено ни одной публикации.`);
   }
-  return res.send(`Введите в строку поиска слово.`);
+  return res.statusCode(400).send(`Введите в строку поиска слово.`);
 });
 
 
