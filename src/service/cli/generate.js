@@ -13,6 +13,7 @@ const {
 const {
   getRandomInt,
   getRandomArr,
+  readContent,
 } = require(`../../utils`);
 
 const FILE_NAME = `mock.json`;
@@ -38,16 +39,6 @@ const PictureRestrict = {
 const SumRestrict = {
   min: 1000,
   max: 100000,
-};
-
-const readContent = async (filePath) => {
-  try {
-    const content = await fs.readFile(filePath, `utf8`);
-    return content.split(`\n`);
-  } catch (err) {
-    console.error(chalk.red(err));
-    return[];
-  }
 };
 
 const getPictureFileName = (number) => number > 10 ? `item${number}.jpg` : `item0${number}.jpg`;

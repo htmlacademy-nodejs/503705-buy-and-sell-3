@@ -2,42 +2,186 @@
 
 const {Router} = require(`express`);
 const router = new Router();
-const fs = require(`fs`).promises;
+const fs = require(`fs`);
+const chalk = require(`chalk`);
 const FILE_NAME = `mock.json`;
+const {readContent} = require(`../../utils.js`);
+const {nanoid} = require(`nanoid`);
 
-const getData = async (fileName) => {
-  const fileContent = await fs.readFile(fileName);
+const getData = (fileName) => {
+  const fileContent = fs.readFileSync(fileName);
   return JSON.parse(fileContent);
 };
 
-router.get(`/offers`, async (req, res) => {
-  const offers = await getData(FILE_NAME);
-  const offersList = offers.map((offer) => 
+const OFFERS = getData(FILE_NAME);
+const NO_OFFER_MESSAGE = `Такого объявления мы не нашли, попробуйте еще раз.`;
+
+const getOfferMarkup = (offer) => (
+  `<h1>${offer.title}</h1>
+  <p>Id объявления: ${offer.id}</p>
+  <p><b>${offer.type}</b></p>
+  <p>${offer.description}</p>
+  <p>Цена: ${offer.sum} ₽</p>
+  <p>${offer.category.join(` `)}</p>
+  <p>Изображение: ${offer.picture}</p>
+  <ul>
+    ${offer.comments.map((item) => `<li>id: ${item.id}<p>${item.comment}</p></li>`).join(``)}
+  </ul>`
+);
+
+const getCommentsMarkup = (offer) => (
+  `<h1>Комментарии объявления «${offer.title}»</h1>
+  <ol>
+    ${offer.comments.map((item) => {
+      return (`<li>id комментария: ${item.id}
+                <p>${item.comment}</p>
+              </li>`);
+    }).join(``)}
+  </ol>`
+);
+
+const getOffersListMarkup = (list) => {
+  const offersList = list.map((offer) => 
     `<li>
       <p>Id объявления ${offer.id}</p>
       <p>Заголовок: ${offer.title}</p>
     </li>`)
     .join(``);
-  res.send(`<ul>${offersList}</ul>`);
+  return `<ul>${offersList}</ul>`;
+};
+
+router.get(`/offers`, (req, res) => {
+  res.send(getOffersListMarkup(OFFERS));
 });
 
-router.get(`/offers/:offerId`, async (req, res) => {
-  const offerId = req.params.offerId;
-  const offers = await getData(FILE_NAME);
-  const offer = offers.find((item) => {
-    return offerId === item.id;
-  });
-  res.send(`
-    <h1>${offer.title}</h1>
-    <p>Id объявления: ${offer.id}</p>
-    <p><b>${offer.type}</b></p>
-    <p>${offer.description}</p>
-    <p>Цена: ${offer.sum} ₽</p>
-    <p>${offer.category.join(` `)}</p>
-    <ul>
-      ${offer.comments.map((item) => `<li>id: ${item.id}<p>${item.comment}</p></li>`).join(``)}
-    </ul>
-  `);
+router.post(`/offers`, (req, res) => {
+  if (!req.body) {
+    return res.status(404).send(`Ошибка при создании объявления.`);
+  }
+  const newOffer = {
+    id: nanoid(),
+    title: req.body.title,
+    type: req.body.type,
+    sum: req.body.sum,
+    category: req.body.category.split(`, `).map((item) => item.trim()),
+    picture: req.body.picture,
+    comments: [],
+  }
+
+  OFFERS.push(newOffer);
+  console.log(chalk.green(`Объявление успешно создано.`));
+  return res.send(getOfferMarkup(newOffer));
 });
+
+router.get(`/offers/:offerId`, (req, res) => {
+  const offerId = req.params.offerId;
+  const offer = OFFERS.find((item) => offerId === item.id);
+  if (offer) {
+    return res.send(getOfferMarkup(offer));
+  }
+  return res.send(NO_OFFER_MESSAGE);
+});
+
+router.put(`/offers/:offerId`, (req, res) => {
+  const offerId = req.params.offerId;
+  const offer = OFFERS.find((item) => offerId === item.id);
+  offer.title = req.body.title;
+  offer.description = req.body.description;
+  offer.sum = req.body.sum;
+  offer.category = req.body.category.split(`, `).map((item) => item.trim());
+  offer.picture = req.body.picture;
+  
+  console.log(chalk.green(`Изменения сохранены`));
+  res.send(getOfferMarkup(offer));
+});
+
+router.delete(`/offers/:offerId`, (req, res) => {
+  const offerId = req.params.offerId;
+  const offer = OFFERS.find((item) => offerId === item.id);
+  if (offer) {
+    OFFERS.splice(OFFERS.indexOf(offer), 1);
+    return res.send(`Объявление удалено.`);
+  }
+  return res.send(NO_OFFER_MESSAGE);
+});
+
+router.get(`/categories`, async (req, res) => {
+  const categories = await readContent(`./data/categories.txt`);
+
+  const categoriesMarkup = categories.map((category) => `<li>${category}</li>`).join(``);
+  
+  res.send(`<ul>${categoriesMarkup}</ul>`);
+});
+
+router.get(`/offers/:offerId/comments`, (req, res) => {
+  const offerId = req.params.offerId;
+  const offer = OFFERS.find((item) => offerId === item.id);
+  if(offer) {
+    return res.send(getCommentsMarkup(offer));
+  }
+});
+
+router.post(`/offers/:offerId/comments`, (req, res) => {
+  if (!req.body) {
+    return (`Ошибка при создании комментария.`);
+  }
+  const offerId = req.params.offerId;
+  const offer = OFFERS.find((item) => offerId === item.id);
+  if (offer) {
+    const newComment = {
+      id: nanoid(),
+      comment: req.body.comment
+    };
+    offer.comments.push(newComment);
+    console.log(chalk.green(`Комментарий успешно создан`));
+    return res.send(getCommentsMarkup(offer));
+  }
+  return res.send(NO_OFFER_MESSAGE);
+});
+
+router.delete(`/offers/:offerId/comments/:commentId`, (req, res) => {
+  const offerId = req.params.offerId;
+  const offer = OFFERS.find((item) => offerId === item.id);
+  if (offer) {
+    const commentId = req.params.commentId;
+    const comment = offer.comments.find((item) => commentId === item.id);
+    if (comment) {
+      offer.comments.splice(offer.comments.indexOf(comment), 1);
+      return res.send(`Комментарий удален.`);
+    }
+    return res.send(`Нет такого комментария у этого объявления. Поищите другой.`);
+  }
+  return res.send(NO_OFFER_MESSAGE);
+});
+
+router.get(`/search`, (req, res) => {
+  if (req.query.query) {
+    const queryString = req.query.query.toLowerCase();
+    let matchingOffers = [];
+    OFFERS.forEach((offer) => {
+      if (offer.title.toLowerCase().indexOf(queryString) >= 0) {
+        matchingOffers.push(offer);
+      }
+    });
+    if (matchingOffers.length) {
+      let postsString = `публикация`;
+      const postsAmount = matchingOffers.length;
+      if (postsAmount > 4 && postsAmount < 20) {
+        postsString = `публикаций`;
+      } else if (postsAmount.toString().search(/[234]$/) >= 0) {
+        postsString = `публикации`;
+      } else {
+        postsString = `публикаций`;
+      }
+      return res.send(
+        `<h1>Найдено ${matchingOffers.length} ${postsString}</h1>` + 
+        getOffersListMarkup(matchingOffers)
+        );
+    }
+    return res.send(`Не найдено ни одной публикации.`);
+  }
+  return res.send(`Введите в строку поиска слово.`);
+});
+
 
 module.exports = router;
