@@ -13,7 +13,7 @@
   "devDependencies": {
     "eslint": "6.8.0",
     "eslint-config-htmlacademy": "0.5.2",
-    "eslint-plugin-react": "^7.19.0",
+    "eslint-plugin-react": "7.19.0",
     "jest": "25.4.0",
     "mkdirp": "1.0.3",
     "nodemon": "2.0.2",
@@ -25,9 +25,10 @@
     "test": "npm run eslint",
     "test::rest": "jest",
     "eslint": "eslint --ext .js src/",
-    "start": "node ./src/service/service.js",
-    "server": "nodemon ./src/service/service.js --server 3000 > ./src/service/logs/info.log",
-    "start-front-server": "node ./src/express/index.js"
+    "start": "LOG_LEVEL=info node ./src/service/service.js > ./src/service/logs/start.log",
+    "start::debug": "LOG_LEVEL=debug node ./src/service/service.js > ./src/service/logs/debug.log",
+    "server": "LOG_LEVEL=info nodemon ./src/service/service.js server 3000 > ./src/service/logs/server.log",
+    "start-front-server": "LOG_LEVEL=info node ./src/express/index.js > ./src/service/logs/front-server.log"
   },
   "repository": {
     "type": "git",

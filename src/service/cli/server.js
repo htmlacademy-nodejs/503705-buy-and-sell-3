@@ -18,7 +18,7 @@ app.use(express.json());
 app.use(`/api`, apiOffers);
 
 app.get(`/offers`, async (req, res) => {
-  logger.debug(`Запрос get к странице /offers`)
+  logger.debug(`Запрос get к странице /offers...`)
   try {
     const fileContent = await fs.readFile(FILE_NAME);
     const mocks = JSON.parse(fileContent);
@@ -26,13 +26,14 @@ app.get(`/offers`, async (req, res) => {
   } catch (error) {
     res.status(HttpCode.INTERNAL_SERVER_ERROR).send(error);
   }
-  logger.error(`Запрос get к странице /offers выполнен. Статус: ${res.statusCode}`)
+  logger.error(`Запрос get к странице /offers выполнен.`);
+  logger.info(`Статус-код ответа ${res.statusCode}`)
 });
 
 app.use((req, res) => res.status(HttpCode.NOT_FOUND).send(`Not found`));
 
 module.exports = {
-  name: `--server`,
+  name: `server`,
   run(args) {
     const customPort = args;
     const port = Number.parseInt(customPort, 10) || DEFAULT_PORT;

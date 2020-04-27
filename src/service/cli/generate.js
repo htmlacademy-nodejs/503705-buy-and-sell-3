@@ -71,7 +71,7 @@ const generateOffers = (count, titles, sentences, categories, comments) => (
 );
 
 module.exports = {
-  name: `--generate`,
+  name: `generate`,
   async run(userCountOfAds) {
     const titles = await readContent(FILE_TITLES_PATH);
     const sentences = await readContent(FILE_SENTENCES_PATH);
