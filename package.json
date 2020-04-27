@@ -25,8 +25,8 @@
     "test": "npm run eslint",
     "test::rest": "jest",
     "eslint": "eslint --ext .js src/",
-    "start": "node ./src/service/service.js > ./src/service/logs/info.log",
-    "server": "nodemon ./src/service/service.js --server 3000",
+    "start": "node ./src/service/service.js",
+    "server": "nodemon ./src/service/service.js --server 3000 > ./src/service/logs/info.log",
     "start-front-server": "node ./src/express/index.js"
   },
   "repository": {
