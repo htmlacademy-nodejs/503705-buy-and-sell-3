@@ -264,7 +264,7 @@ router.get(`/search`, (req, res) => {
     logger.info(`Статус-код ответа 404`);
     return res.status(404).send(`Не найдено ни одной публикации.`);
   }
-  logger.error(`Запрос ${res.method} по пустой строке не может быть выполнен.`);
+  logger.error(`Запрос ${req.method} по пустой строке не может быть выполнен.`);
   logger.info(`Статус-код ответа 400`);
   return res.status(400).send(`Введите в строку поиска слово.`);
 });
