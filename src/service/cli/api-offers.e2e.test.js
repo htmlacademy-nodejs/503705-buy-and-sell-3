@@ -39,7 +39,7 @@ describe(`Offers API end-points`, () => {
   });
 
   test(`When get offer with correct id status code should be 200`, async () => {
-    const res = await request(server).get(`/api/offers/fq10DY`);
+    const res = await request(server).get(`/api/offers/lVtqlp`);
     expect(res.statusCode).toBe(200);
   });
 
