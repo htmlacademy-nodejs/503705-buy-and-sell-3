@@ -25,6 +25,7 @@ const getOfferMarkup = (offer) => (
   <p>Цена: ${offer.sum} ₽</p>
   <p>${offer.category.join(` `)}</p>
   <p>Изображение: ${offer.picture}</p>
+  <h2>Комментарии:</h2>
   <ul>
     ${offer.comments.map((item) => `<li>id: ${item.id}<p>${item.comment}</p></li>`).join(``)}
   </ul>`
@@ -48,12 +49,30 @@ const getOffersListMarkup = (list) => {
       <p>Заголовок: ${offer.title}</p>
     </li>`)
     .join(``);
-  return `<ul>${offersList}</ul>`;
+  return (
+    `<h1>Список объявлений</h1>
+    <ul>${offersList}</ul>`
+  );
 };
+
+const getPage = (title, content) => (
+  `<!Doctype html>
+  <html lang="ru">
+    <head>
+      <meta charset="utf-8">
+      <title>${title}</title>
+    </head>
+    <body>
+      ${content}
+    </body>
+  </html>`
+);
 
 router.get(`/offers`, (req, res) => {
   logger.debug(`Запрос ${req.method} к странице /api${req.url}...`);
-  res.send(getOffersListMarkup(OFFERS));
+  const offersMarkup = getOffersListMarkup(OFFERS);
+  const title = `Список объявлений`;
+  res.send(getPage(title, offersMarkup));
   logger.error(`Запрос ${req.method} к странице /api${req.url} выполнен.`);
   logger.info(`Статус-код ответа ${res.statusCode}`)
 });
@@ -86,9 +105,10 @@ router.get(`/offers/:offerId`, (req, res) => {
   const offerId = req.params.offerId;
   const offer = OFFERS.find((item) => offerId === item.id);
   if (offer) {
+    const offerMarkup = getOfferMarkup(offer);
     logger.error(`Запрос ${req.method} к странице /api${req.url} успешно выполнен`);
     logger.info(`Статус-код ответа ${res.statusCode}`);
-    return res.send(getOfferMarkup(offer));
+    return res.send(getPage(offer.title, offerMarkup));
   }
   logger.error(`Запрос ${req.method} к странице /api${req.url} не выполнен. Неверный id.`);
   logger.info(`Статус-код ответа 404`);
