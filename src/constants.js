@@ -2,6 +2,7 @@
 
 module.exports.DEFAULT_COMMAND = `--help`;
 module.exports.USER_ARGV_INDEX = 2;
+module.exports.ID_SIZE = 6;
 
 module.exports.COUNT_ERROR_MESSAGE = `Не больше 1000 объявлений`;
 
