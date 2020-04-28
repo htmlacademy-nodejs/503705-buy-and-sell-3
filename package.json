@@ -23,10 +23,10 @@
   },
   "scripts": {
     "test": "npm run eslint",
-    "test::rest": "jest",
+    "test::rest": "LOG_LEVEL=debug jest > ./src/service/logs/test-rest.log",
     "eslint": "eslint --ext .js src/ --ignore .test.js",
     "start": "LOG_LEVEL=info node ./src/service/service.js > ./src/service/logs/start.log",
-    "start::debug": "LOG_LEVEL=debug node ./src/service/service.js > ./src/service/logs/debug.log",
+    "start::debug": "LOG_LEVEL=debug node ./src/service/service.js > ./src/service/logs/start-debug.log",
     "server": "LOG_LEVEL=info nodemon ./src/service/service.js server 3000 > ./src/service/logs/server.log",
     "start-front-server": "LOG_LEVEL=info node ./src/express/index.js > ./src/service/logs/front-server.log"
   },
