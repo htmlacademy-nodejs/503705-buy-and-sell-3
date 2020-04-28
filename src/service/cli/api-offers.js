@@ -93,7 +93,8 @@ router.post(`/offers`, (req, res) => {
     OFFERS.push(newOffer);
     logger.error(`Объявление успешно создано.`);
     logger.info(` Статус-код ответа ${res.statusCode}`)
-    return res.send(getOfferMarkup(newOffer));
+    const offerMarkup = getOfferMarkup(newOffer);
+    return res.send(getPage(newOffer.title, offerMarkup));
   }
   logger.error(`Не заполнены все поля.`);
   logger.info(`Статус-код ответа 400`);
@@ -106,7 +107,7 @@ router.get(`/offers/:offerId`, (req, res) => {
   const offer = OFFERS.find((item) => offerId === item.id);
   if (offer) {
     const offerMarkup = getOfferMarkup(offer);
-    logger.error(`Запрос ${req.method} к странице /api${req.url} успешно выполнен`);
+    logger.error(`Запрос ${req.method} к странице /api${req.url} успешно выполнен.`);
     logger.info(`Статус-код ответа ${res.statusCode}`);
     return res.send(getPage(offer.title, offerMarkup));
   }
@@ -129,7 +130,8 @@ router.put(`/offers/:offerId`, (req, res) => {
 
     logger.error(`Изменения сохранены`);
     logger.info(`Статус-код ответа ${res.statusCode}`);
-    return res.send(getOfferMarkup(offer));
+    const offerMarkup = getOfferMarkup(offer);
+    return res.send(getPage(offer.title, offerMarkup));
   }
   logger.error(`Изменения не сохранены. Не заполнены все поля.`);
   logger.info(`Статус-код ответа 400`);
@@ -155,9 +157,10 @@ router.get(`/categories`, async (req, res) => {
   logger.debug(`Запрос ${req.method} к странице /api${req.url}...`);
   const categories = await readContent(`./data/categories.txt`);
 
-  const categoriesMarkup = categories.map((category) => `<li>${category}</li>`).join(``);
+  const categoriesMarkup = `<h1>Список категорий</h1><ul>${categories.map((category) => `<li>${category}</li>`).join(``)}</ul>`;
+  const title = `Список категорий`;
   
-  res.send(`<ul>${categoriesMarkup}</ul>`);
+  res.send(getPage(title, categoriesMarkup));
   logger.error(`Запрос ${req.method} к странице /api${req.url} успешно выполен.`);
   logger.info(`Статус-код ответа ${res.statusCode}`);
 });
@@ -169,7 +172,9 @@ router.get(`/offers/:offerId/comments`, (req, res) => {
   if(offer) {
     logger.error(`Запрос ${req.method} к странице /api${req.url} успешно выполнен.`);
     logger.info(`Статус-код ответа ${res.statusCode}`);
-    return res.send(getCommentsMarkup(offer));
+    const commentsMarkup = getCommentsMarkup(offer);
+    const title = `Комментарии`;
+    return res.send(getPage(title, commentsMarkup));
   }
   logger.error(`Запрос ${req.method} к странице /api${req.url} не выполнен. Такой страницы нет.`);
   logger.info(`Статус-код ответа 404`);
@@ -194,7 +199,9 @@ router.post(`/offers/:offerId/comments`, (req, res) => {
       offer.comments.push(newComment);
       logger.error(`Комментарий успешно создан`);
       logger.info(`Статус-код ответа ${res.statusCode}`);
-      return res.send(getCommentsMarkup(offer));
+      const commentsMarkup = getCommentsMarkup(offer);
+      const title = `Комментарии`;
+      return res.send(getPage(title, commentsMarkup));
     }
     logger.error(`Ошибка при создании комментария. Нет текста комментария.`);
     logger.info(`Статус-код ответа 400`);
@@ -249,10 +256,9 @@ router.get(`/search`, (req, res) => {
       }
       logger.error(`Запрос ${req.method} к странице /api${res.url} успешно выполнен.`);
       logger.info(`Статус-код ответа ${res.statusCode}`);
-      return res.send(
-        `<h1>Найдено ${postsAmount} ${postsString}</h1>` + 
-        getOffersListMarkup(matchingOffers)
-        );
+      const searchMarkup = `<p>Найдено ${postsAmount} ${postsString}</p>` + getOffersListMarkup(matchingOffers);
+      const title = `Результат поиска`;
+      return res.send(getPage(title, searchMarkup));
     }
     logger.error(`Запрос ${req.method} к странице /api${req.url} успешно выполнен. Ничего не найдено.`);
     logger.info(`Статус-код ответа 404`);
