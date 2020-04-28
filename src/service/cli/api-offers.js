@@ -24,6 +24,7 @@ const getOfferMarkup = (offer) => (
   <p>Цена: ${offer.sum} ₽</p>
   <p>${offer.category.join(` `)}</p>
   <p>Изображение: ${offer.picture}</p>
+  <h2>Комментарии:</h2>
   <ul>
     ${offer.comments.map((item) => `<li>id: ${item.id}<p>${item.comment}</p></li>`).join(``)}
   </ul>`
@@ -47,11 +48,29 @@ const getOffersListMarkup = (list) => {
       <p>Заголовок: ${offer.title}</p>
     </li>`)
     .join(``);
-  return `<ul>${offersList}</ul>`;
+  return (
+    `<h1>Список объявлений</h1>
+    <ul>${offersList}</ul>`
+  );
 };
 
+const getPage = (title, content) => (
+  `<!Doctype html>
+  <html lang="ru">
+    <head>
+      <meta charset="utf-8">
+      <title>${title}</title>
+    </head>
+    <body>
+      ${content}
+    </body>
+  </html>`
+);
+
 router.get(`/offers`, (req, res) => {
-  res.send(getOffersListMarkup(OFFERS));
+  const offersMarkup = getOffersListMarkup(OFFERS);
+  const title = `Список объявлений`;
+  res.send(getPage(title, offersMarkup));
 });
 
 router.post(`/offers`, (req, res) => {
@@ -70,14 +89,16 @@ router.post(`/offers`, (req, res) => {
 
   OFFERS.push(newOffer);
   console.log(chalk.green(`Объявление успешно создано.`));
-  return res.send(getOfferMarkup(newOffer));
+  const offerMarkup = getOfferMarkup(newOffer);
+  return res.send(getPage(newOffer.title, offerMarkup));
 });
 
 router.get(`/offers/:offerId`, (req, res) => {
   const offerId = req.params.offerId;
   const offer = OFFERS.find((item) => offerId === item.id);
   if (offer) {
-    return res.send(getOfferMarkup(offer));
+    const offerMarkup = getOfferMarkup(offer);
+    return res.send(getPage(offer.title, offerMarkup));
   }
   return res.statusCode(404).send(NO_OFFER_MESSAGE);
 });
@@ -92,7 +113,8 @@ router.put(`/offers/:offerId`, (req, res) => {
   offer.picture = req.body.picture;
   
   console.log(chalk.green(`Изменения сохранены`));
-  res.send(getOfferMarkup(offer));
+  const offerMarkup = getOfferMarkup(offer);
+  res.send(getPage(offer.title, offerMarkup));
 });
 
 router.delete(`/offers/:offerId`, (req, res) => {
@@ -108,16 +130,19 @@ router.delete(`/offers/:offerId`, (req, res) => {
 router.get(`/categories`, async (req, res) => {
   const categories = await readContent(`./data/categories.txt`);
 
-  const categoriesMarkup = categories.map((category) => `<li>${category}</li>`).join(``);
+  const categoriesMarkup = `<h1>Список категорий</h1><ul>${categories.map((category) => `<li>${category}</li>`).join(``)}</ul>`;
+  const title = `Список категорий`;
   
-  res.send(`<ul>${categoriesMarkup}</ul>`);
+  res.send(getPage(title, categoriesMarkup));
 });
 
 router.get(`/offers/:offerId/comments`, (req, res) => {
   const offerId = req.params.offerId;
   const offer = OFFERS.find((item) => offerId === item.id);
   if(offer) {
-    return res.send(getCommentsMarkup(offer));
+    const commentsMarkup = getCommentsMarkup(offer);
+    const title = `Комментарии`;
+    return res.send(getPage(title, commentsMarkup));
   }
   return res.statusCode(404).send(NO_OFFER_MESSAGE);
 });
@@ -136,7 +161,9 @@ router.post(`/offers/:offerId/comments`, (req, res) => {
       };
       offer.comments.push(newComment);
       console.log(chalk.green(`Комментарий успешно создан`));
-      return res.send(getCommentsMarkup(offer));
+      const commentsMarkup = getCommentsMarkup(offer);
+      const title = `Комментарии`;
+      return res.send(getPage(title, commentsMarkup));
     }
     return res.statusCode(400).send(`Напишите текст комментария.`);
   }
@@ -177,10 +204,9 @@ router.get(`/search`, (req, res) => {
       } else {
         postsString = `публикаций`;
       }
-      return res.send(
-        `<h1>Найдено ${postsAmount} ${postsString}</h1>` + 
-        getOffersListMarkup(matchingOffers)
-        );
+      const searchMarkup = `<p>Найдено ${postsAmount} ${postsString}</p>` + getOffersListMarkup(matchingOffers);
+      const title = `Результат поиска`;
+      return res.send(getPage(title, searchMarkup));
     }
     return res.statusCode(404).send(`Не найдено ни одной публикации.`);
   }
