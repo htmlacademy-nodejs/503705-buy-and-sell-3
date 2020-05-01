@@ -1,7 +1,7 @@
 'use strict';
 
 const fs = require(`fs`).promises;
-const chalk = require(`chalk`);
+const logger = require(`pino`)();
 
 const getRandomInt = (min, max) => {
   min = Math.ceil(min);
@@ -29,7 +29,7 @@ const readContent = async (filePath) => {
     const content = await fs.readFile(filePath, `utf8`);
     return content.split(`\n`);
   } catch (err) {
-    console.error(chalk.red(err));
+    logger.error(err);
     return[];
   }
 };
