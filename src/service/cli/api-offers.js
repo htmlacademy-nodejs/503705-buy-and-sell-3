@@ -102,18 +102,24 @@ router.post(`/offers`, (req, res) => {
 });
 
 router.get(`/offers/:offerId`, (req, res) => {
-  logger.debug(`Запрос ${req.method} к странице /api${req.url}...`)
-  const offerId = req.params.offerId;
-  const offer = OFFERS.find((item) => offerId === item.id);
-  if (offer) {
-    const offerMarkup = getOfferMarkup(offer);
-    logger.error(`Запрос ${req.method} к странице /api${req.url} успешно выполнен.`);
-    logger.info(`Статус-код ответа ${res.statusCode}`);
-    return res.send(getPage(offer.title, offerMarkup));
+  try {
+    logger.debug(`Запрос ${req.method} к странице /api${req.url}...`)
+    const offerId = req.params.offerId;
+    const offer = OFFERS.find((item) => offerId === item.id);
+    if (offer) {
+      const offerMarkup = getOfferMarkup(offer);
+      logger.error(`Запрос ${req.method} к странице /api${req.url} успешно выполнен.`);
+      logger.info(`Статус-код ответа ${res.statusCode}`);
+      return res.send(getPage(offer.title, offerMarkup));
+    }
+    logger.error(`Запрос ${req.method} к странице /api${req.url} не выполнен. Неверный id.`);
+    logger.info(`Статус-код ответа 404`);
+    return res.status(404).send(NO_OFFER_MESSAGE);
   }
-  logger.error(`Запрос ${req.method} к странице /api${req.url} не выполнен. Неверный id.`);
-  logger.info(`Статус-код ответа 404`);
-  return res.status(404).send(NO_OFFER_MESSAGE);
+    catch (err) {
+      console.log(err);
+      throw new Error (`Mistake`);
+    }
 });
 
 router.put(`/offers/:offerId`, (req, res) => {

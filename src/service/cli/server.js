@@ -31,6 +31,14 @@ app.get(`/offers`, async (req, res) => {
 });
 
 app.use((req, res) => res.status(HttpCode.NOT_FOUND).send(`Not found`));
+app.use((err, req, res, next) => {
+  if (err.message === `Обработчик ошибок сработал`) {
+    res.status(500).send(`Какая-нибудь херня`);
+  }
+  logger.error(`Обработчик ошибок сработал`);
+  res.status(500).send(err.message);
+  next();
+});
 
 module.exports = {
   name: `server`,
@@ -40,9 +48,10 @@ module.exports = {
 
     app.listen(port, (error) => {
       if (error) {
+        console.log(ERROR_MESSAGE);
         return logger.error(ERROR_MESSAGE);
       }
-
+      console.log(SUCCESS_MESSAGE + `${port}`);
       return logger.info(SUCCESS_MESSAGE + `${port}`);
     });
   },
