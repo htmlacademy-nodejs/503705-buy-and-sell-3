@@ -3,10 +3,11 @@
 const {Router} = require(`express`);
 const router = new Router();
 const fs = require(`fs`);
-const chalk = require(`chalk`);
 const FILE_NAME = `mock.json`;
 const {readContent} = require(`../../utils.js`);
 const {nanoid} = require(`nanoid`);
+const {getLogger} = require(`../logger.js`);
+const logger = getLogger();
 
 const getData = (fileName) => {
   const fileContent = fs.readFileSync(fileName);
@@ -68,88 +69,130 @@ const getPage = (title, content) => (
 );
 
 router.get(`/offers`, (req, res) => {
+  logger.debug(`Запрос ${req.method} к странице /api${req.url}...`);
   const offersMarkup = getOffersListMarkup(OFFERS);
   const title = `Список объявлений`;
   res.send(getPage(title, offersMarkup));
+  logger.error(`Запрос ${req.method} к странице /api${req.url} выполнен.`);
+  logger.info(`Статус-код ответа ${res.statusCode}`)
 });
 
 router.post(`/offers`, (req, res) => {
-  if (!req.body.title || !req.body.type || !req.body.sum || !req.body.category || !req.body.picture) {
-    return res.statusCode(400).send(`Нужно заполнить все поля.`);
+  logger.debug(`Запрос ${req.method} к странице /api/${req.url}...`)
+  if (req.body.title && req.body.type && req.body.sum && req.body.category && req.body.picture) {
+    const newOffer = {
+      id: nanoid(),
+      title: req.body.title,
+      type: req.body.type,
+      sum: req.body.sum,
+      category: req.body.category.split(`, `).map((item) => item.trim()),
+      picture: req.body.picture,
+      comments: [],
+    }
+  
+    OFFERS.push(newOffer);
+    logger.error(`Объявление успешно создано.`);
+    logger.info(` Статус-код ответа ${res.statusCode}`)
+    const offerMarkup = getOfferMarkup(newOffer);
+    return res.send(getPage(newOffer.title, offerMarkup));
   }
-  const newOffer = {
-    id: nanoid(),
-    title: req.body.title,
-    type: req.body.type,
-    sum: req.body.sum,
-    category: req.body.category.split(`, `).map((item) => item.trim()),
-    picture: req.body.picture,
-    comments: [],
-  }
-
-  OFFERS.push(newOffer);
-  console.log(chalk.green(`Объявление успешно создано.`));
-  const offerMarkup = getOfferMarkup(newOffer);
-  return res.send(getPage(newOffer.title, offerMarkup));
+  logger.error(`Не заполнены все поля.`);
+  logger.info(`Статус-код ответа 400`);
+  return res.status(400).send(`Нужно заполнить все поля.`);
 });
 
 router.get(`/offers/:offerId`, (req, res) => {
-  const offerId = req.params.offerId;
-  const offer = OFFERS.find((item) => offerId === item.id);
-  if (offer) {
-    const offerMarkup = getOfferMarkup(offer);
-    return res.send(getPage(offer.title, offerMarkup));
+  try {
+    logger.debug(`Запрос ${req.method} к странице /api${req.url}...`)
+    const offerId = req.params.offerId;
+    const offer = OFFERS.find((item) => offerId === item.id);
+    if (offer) {
+      const offerMarkup = getOfferMarkup(offer);
+      logger.error(`Запрос ${req.method} к странице /api${req.url} успешно выполнен.`);
+      logger.info(`Статус-код ответа ${res.statusCode}`);
+      return res.send(getPage(offer.title, offerMarkup));
+    }
+    logger.error(`Запрос ${req.method} к странице /api${req.url} не выполнен. Неверный id.`);
+    logger.info(`Статус-код ответа 404`);
+    return res.status(404).send(NO_OFFER_MESSAGE);
   }
-  return res.statusCode(404).send(NO_OFFER_MESSAGE);
+    catch (err) {
+      console.log(err);
+      throw new Error (`Mistake`);
+    }
 });
 
 router.put(`/offers/:offerId`, (req, res) => {
+  logger.debug(`Запрос ${req.method} к странице /api${req.url}...`);
   const offerId = req.params.offerId;
   const offer = OFFERS.find((item) => offerId === item.id);
-  offer.title = req.body.title;
-  offer.description = req.body.description;
-  offer.sum = req.body.sum;
-  offer.category = req.body.category.split(`, `).map((item) => item.trim());
-  offer.picture = req.body.picture;
-  
-  console.log(chalk.green(`Изменения сохранены`));
-  const offerMarkup = getOfferMarkup(offer);
-  res.send(getPage(offer.title, offerMarkup));
+  if (req.body.title && req.body.description && req.body.sum && req.body.category && req.body.picture) {
+    offer.id = offerId;
+    offer.title = req.body.title;
+    offer.description = req.body.description;
+    offer.sum = req.body.sum;
+    offer.category = req.body.category.split(`, `).map((item) => item.trim());
+    offer.picture = req.body.picture;
+
+    logger.error(`Изменения сохранены`);
+    logger.info(`Статус-код ответа ${res.statusCode}`);
+    const offerMarkup = getOfferMarkup(offer);
+    return res.send(getPage(offer.title, offerMarkup));
+  }
+  logger.error(`Изменения не сохранены. Не заполнены все поля.`);
+  logger.info(`Статус-код ответа 400`);
+  return res.status(400).send(`Нужно заполнить все поля.`);
 });
 
 router.delete(`/offers/:offerId`, (req, res) => {
+  logger.debug(`Запрос ${req.method} к странице /api${req.url}...`);
   const offerId = req.params.offerId;
   const offer = OFFERS.find((item) => offerId === item.id);
   if (offer) {
     OFFERS.splice(OFFERS.indexOf(offer), 1);
+    logger.error(`Объявление успешно удалено.`);
+    logger.info(`Статус-код ответа ${res.statusCode}`);
     return res.send(`Объявление удалено.`);
   }
-  return res.statusCode(404).send(NO_OFFER_MESSAGE);
+  logger.error(`Такого объявления нет.`);
+  logger.info(`Статус-код ответа 404`);
+  return res.status(404).send(NO_OFFER_MESSAGE);
 });
 
 router.get(`/categories`, async (req, res) => {
+  logger.debug(`Запрос ${req.method} к странице /api${req.url}...`);
   const categories = await readContent(`./data/categories.txt`);
 
   const categoriesMarkup = `<h1>Список категорий</h1><ul>${categories.map((category) => `<li>${category}</li>`).join(``)}</ul>`;
   const title = `Список категорий`;
   
   res.send(getPage(title, categoriesMarkup));
+  logger.error(`Запрос ${req.method} к странице /api${req.url} успешно выполен.`);
+  logger.info(`Статус-код ответа ${res.statusCode}`);
 });
 
 router.get(`/offers/:offerId/comments`, (req, res) => {
+  logger.debug(`Запрос ${req.method} к странице /api${req.url}...`);
   const offerId = req.params.offerId;
   const offer = OFFERS.find((item) => offerId === item.id);
   if(offer) {
+    logger.error(`Запрос ${req.method} к странице /api${req.url} успешно выполнен.`);
+    logger.info(`Статус-код ответа ${res.statusCode}`);
     const commentsMarkup = getCommentsMarkup(offer);
     const title = `Комментарии`;
     return res.send(getPage(title, commentsMarkup));
   }
-  return res.statusCode(404).send(NO_OFFER_MESSAGE);
+  logger.error(`Запрос ${req.method} к странице /api${req.url} не выполнен. Такой страницы нет.`);
+  logger.info(`Статус-код ответа 404`);
+  return res.status(404).send(NO_OFFER_MESSAGE);
 });
 
 router.post(`/offers/:offerId/comments`, (req, res) => {
+  logger.debug(`Запрос ${req.method} к странице /api${req.url}...`);
   if (!req.body) {
-    return res.statusCode(400).send(`Ошибка при создании комментария.`);
+    logger.error(`Ошибка при создании комментария.`);
+    logger.info(`Статус-код ответа 400`);
+    return res.status(400).send(`Ошибка при создании комментария. Заполните все поля.`);
   }
   const offerId = req.params.offerId;
   const offer = OFFERS.find((item) => offerId === item.id);
@@ -160,17 +203,23 @@ router.post(`/offers/:offerId/comments`, (req, res) => {
         comment: req.body.comment
       };
       offer.comments.push(newComment);
-      console.log(chalk.green(`Комментарий успешно создан`));
+      logger.error(`Комментарий успешно создан`);
+      logger.info(`Статус-код ответа ${res.statusCode}`);
       const commentsMarkup = getCommentsMarkup(offer);
       const title = `Комментарии`;
       return res.send(getPage(title, commentsMarkup));
     }
-    return res.statusCode(400).send(`Напишите текст комментария.`);
+    logger.error(`Ошибка при создании комментария. Нет текста комментария.`);
+    logger.info(`Статус-код ответа 400`);
+    return res.status(400).send(`Напишите текст комментария.`);
   }
-  return res.statusCode(404).send(NO_OFFER_MESSAGE);
+  logger.error(`Такого объявления нет. Неверный id.`);
+  logger.info(`Статус-код ответа 404`);
+  return res.status(404).send(NO_OFFER_MESSAGE);
 });
 
 router.delete(`/offers/:offerId/comments/:commentId`, (req, res) => {
+  logger.debug(`Запрос ${req.method} к странице /api${req.url}...`);
   const offerId = req.params.offerId;
   const offer = OFFERS.find((item) => offerId === item.id);
   if (offer) {
@@ -178,14 +227,21 @@ router.delete(`/offers/:offerId/comments/:commentId`, (req, res) => {
     const comment = offer.comments.find((item) => commentId === item.id);
     if (comment) {
       offer.comments.splice(offer.comments.indexOf(comment), 1);
+      logger.error(`Комментарий успешно удален.`);
+      logger.info(`Статус-код ответа ${res.statusCode}`);
       return res.send(`Комментарий удален.`);
     }
+    logger.error(`Такого комментария нет. Неверный id.`);
+    logger.info(`Статус-код ответа 404`);
     return res.statusCode(404).send(`Нет такого комментария у этого объявления. Поищите другой.`);
   }
+  logger.error(`Такого объявления нет. Неверный id.`);
+  logger.info(`Статус-код ответа 404`);
   return res.statusCode(404).send(NO_OFFER_MESSAGE);
 });
 
 router.get(`/search`, (req, res) => {
+  logger.debug(`Запрос ${req.method} к странице ${req.url}...`);
   if (req.query.query) {
     const queryString = req.query.query.toLowerCase();
     let matchingOffers = [];
@@ -204,13 +260,19 @@ router.get(`/search`, (req, res) => {
       } else {
         postsString = `публикаций`;
       }
+      logger.error(`Запрос ${req.method} к странице /api${res.url} успешно выполнен.`);
+      logger.info(`Статус-код ответа ${res.statusCode}`);
       const searchMarkup = `<p>Найдено ${postsAmount} ${postsString}</p>` + getOffersListMarkup(matchingOffers);
       const title = `Результат поиска`;
       return res.send(getPage(title, searchMarkup));
     }
-    return res.statusCode(404).send(`Не найдено ни одной публикации.`);
+    logger.error(`Запрос ${req.method} к странице /api${req.url} успешно выполнен. Ничего не найдено.`);
+    logger.info(`Статус-код ответа 404`);
+    return res.status(404).send(`Не найдено ни одной публикации.`);
   }
-  return res.statusCode(400).send(`Введите в строку поиска слово.`);
+  logger.error(`Запрос ${req.method} по пустой строке не может быть выполнен.`);
+  logger.info(`Статус-код ответа 400`);
+  return res.status(400).send(`Введите в строку поиска слово.`);
 });
 
 
